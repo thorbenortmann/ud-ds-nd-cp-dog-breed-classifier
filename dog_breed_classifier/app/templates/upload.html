@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dog Breed Classifier</title>
+</head>
+<body>
+    <h1>Dog Breed Classifier</h1>
+    <p>If a dog is detected in it, you will receive the predicted breed.</p>
+    <p>If a human face is detected in it, you will receive the resembling dog breed.</p>
+    <p>If neither is detected, you will receive an error message.</p>
+
+    <h3>Upload your Image here:</h3>
+    <p><i>(png, jpg or jpeg)</i></p>
+    <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <input type="submit" value="Upload">
+    </form>
+</body>
+</html>
