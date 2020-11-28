@@ -3,12 +3,12 @@ from pathlib import Path
 from flask import Flask, redirect, request, render_template, url_for
 from werkzeug.utils import secure_filename
 
+from dog_breed_classifier import paths
 from dog_breed_classifier.detection.breed_detection import detect_breed
 from dog_breed_classifier.detection.dog_detection import detect_dog
 from dog_breed_classifier.detection.face_detection import detect_human_face
 
 
-UPLOAD_FOLDER = str(Path(__file__).parent / 'static' / 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 
@@ -18,7 +18,7 @@ def allowed_file(filename):
 
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['UPLOAD_FOLDER'] = str(paths.UPLOAD_FOLDER)
 
 
 @app.route('/', methods=('GET', ))
