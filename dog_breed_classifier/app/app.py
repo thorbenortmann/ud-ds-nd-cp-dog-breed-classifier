@@ -8,32 +8,36 @@ from dog_breed_classifier.detection.breed_detection import detect_breed
 from dog_breed_classifier.detection.dog_detection import detect_dog
 from dog_breed_classifier.detection.face_detection import detect_human_face
 
-
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+def allowed_file(file_name: str) -> bool:
+    """
+    Checks if the given file name seems to be valid.
+    :param file_name: file name to validate.
+    :return: whether the given file name is valid/allowed or not.
+    """
+    return '.' in file_name and \
+           file_name.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = str(paths.UPLOAD_FOLDER)
 
 
-@app.route('/', methods=('GET', ))
+@app.route('/', methods=('GET',))
 def index():
     """
     Enables the user to submit .png, .jpg or .jpeg files.
+    :return html upload page.
     """
     return render_template('upload.html')
 
 
-@app.route('/upload', methods=('POST', ))
+@app.route('/upload', methods=('POST',))
 def upload():
     """
     Stores the file submitted via the '/' endpoint.
-    :return:
     """
     if 'file' not in request.files:
         return redirect(url_for('index'))
@@ -51,7 +55,7 @@ def upload():
     return redirect(url_for('result', file_name=file_name))
 
 
-@app.route('/result/<file_name>', methods=('GET', ))
+@app.route('/result/<file_name>', methods=('GET',))
 def result(file_name):
     """
     Classifies the file given by file_name.
@@ -68,6 +72,7 @@ def result(file_name):
     else:
         message = 'The following breed was detected for the uploaded image:'
         breed = detect_breed(img_path)
+
     return render_template('result.html',
                            message=message,
                            breed=breed,
