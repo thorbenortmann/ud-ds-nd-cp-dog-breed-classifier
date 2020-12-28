@@ -1,54 +1,17 @@
 from pathlib import Path
-from typing import Iterable, Tuple
 
+from keras.callbacks import History, ModelCheckpoint
+from keras.layers import Conv2D, MaxPooling2D, GlobalAveragePooling2D
+from keras.layers import Dense
+from keras.models import Sequential
+from keras.optimizers import RMSprop
 import numpy as np
 from PIL import ImageFile
-from sklearn.datasets import load_files
-from tensorflow.keras import utils
-from tensorflow.keras.callbacks import ModelCheckpoint
-from tensorflow.keras.preprocessing import image
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, GlobalAveragePooling2D
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.models import Sequential
-from tqdm import tqdm
 
 from dog_breed_classifier import paths
+from dog_breed_classifier.detection.training.utils import evaluate_model, load_dataset, paths_to_tensor, plot_history
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-
-
-def load_dataset(path: Path) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Loads the data given at path into source and target vectors using sklearn.datasets.load_files.
-    :param path: Path to load data from.
-    :return: the file names (representing the source vectors) and the target vector.
-    """
-    data = load_files(str(path))
-    dog_files = np.array(data['filenames'])
-    dog_targets = utils.to_categorical(np.array(data['target']), num_classes=133)
-    return dog_files, dog_targets
-
-
-def path_to_tensor(img_path: str) -> np.ndarray:
-    """
-    Converts the image given by img_path into a 4D-tensor with shape (1, 224, 224, 3).
-    :param img_path: path as str to the image to convert in a tensor.
-    :return: the 4D-tensor of the image.
-    """
-    img = image.load_img(img_path, target_size=(224, 224))
-    x = image.img_to_array(img)
-    return np.expand_dims(x, axis=0)
-
-
-def paths_to_tensor(img_paths: Iterable[str]) -> np.ndarray:
-    """
-    Converts all images given by img_paths into 4D-tensor with shape (1, 224, 224, 3)
-        and stacks them vertically.
-    :param img_paths: paths to the images to convert into tensors.
-    :return: a 4D-tensor with shape (num_samples, 224, 224, 3).
-    """
-    list_of_tensors = [path_to_tensor(img_path) for img_path in tqdm(img_paths)]
-    return np.vstack(list_of_tensors)
 
 
 def create_model() -> Sequential:
@@ -59,13 +22,19 @@ def create_model() -> Sequential:
     :return: the defined and compiled model.
     """
     model = Sequential()
-    model.add(Conv2D(16, (3, 3), input_shape=(224, 224, 3)))
+
+    model.add(Conv2D(32, (3, 3), input_shape=(224, 224, 3)))
     model.add(MaxPooling2D((2, 2)))
+
+    model.add(Conv2D(64, (3, 3)))
+    model.add(MaxPooling2D((2, 2)))
+
     model.add(GlobalAveragePooling2D())
     model.add(Dense(133, activation='softmax'))
 
     model.summary()
-    model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
+
+    model.compile(optimizer=RMSprop(lr=0.005), loss='categorical_crossentropy', metrics=['accuracy'])
 
     return model
 
@@ -76,7 +45,7 @@ def fit_model(model: Sequential,
               valid_tensors: np.ndarray,
               valid_targets: np.ndarray,
               epochs: int,
-              best_model_path: Path) -> None:
+              best_model_path: Path) -> History:
     """
     Fit the given model with the other parameters passed to this function.
     :param model: model to fit.
@@ -88,27 +57,16 @@ def fit_model(model: Sequential,
     :param best_model_path: path to store the best model to.
     :return: None
     """
-
     checkpointer = ModelCheckpoint(filepath=str(best_model_path), verbose=1, save_best_only=True)
 
-    model.fit(train_tensors, train_targets,
-              validation_data=(valid_tensors, valid_targets),
-              epochs=epochs, batch_size=20, callbacks=[checkpointer], verbose=1)
+    train_history: History = model.fit(train_tensors, train_targets,
+                                       validation_data=(valid_tensors, valid_targets),
+                                       epochs=epochs,
+                                       batch_size=32,
+                                       callbacks=[checkpointer],
+                                       verbose=1)
 
-
-def evaluate_model(model: Sequential, test_tensors: np.ndarray, test_targets: np.ndarray) -> float:
-    """
-    Evaluate the given model on the given test_tensors with the given test_targets.
-    :param model: model to evaluate.
-    :param test_tensors: tensors the model makes predictions for.
-    :param test_targets: target vector to compare the model's predictions with.
-    :return: the computed test accuracy.
-    """
-    # get index of predicted dog breed for each image in test set
-    dog_breed_predictions = [np.argmax(model.predict(np.expand_dims(tensor, axis=0))) for tensor in test_tensors]
-
-    # report test accuracy
-    return 100 * np.sum(np.array(dog_breed_predictions) == np.argmax(test_targets, axis=1)) / len(dog_breed_predictions)
+    return train_history
 
 
 if __name__ == '__main__':
@@ -134,9 +92,12 @@ if __name__ == '__main__':
     model = create_model()
 
     # fit the model
-    epochs = 5
+    epochs = 12
     best_model_path: Path = paths.FROM_SCRATCH_MODEL_WEIGHTS
-    fit_model(model, train_tensors, train_targets, valid_tensors, valid_targets, epochs, best_model_path)
+    history = fit_model(model, train_tensors, train_targets, valid_tensors, valid_targets, epochs, best_model_path)
+
+    # plot training history
+    plot_history(history, paths.FROM_SCRATCH_MODEL_HISTORY)
 
     # load the best fitted model
     model.load_weights(str(best_model_path))
@@ -144,3 +105,6 @@ if __name__ == '__main__':
     # evaluate model
     test_accuracy = evaluate_model(model, test_tensors, test_targets)
     print('Test accuracy: %.4f%%' % test_accuracy)
+
+    # save whole model
+    model.save(str(paths.FROM_SCRATCH_MODEL))
