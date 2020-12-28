@@ -1,0 +1,8 @@
+# Ignore Everything
+*
+
+# Except these files:
+!.gitignore
+
+!from_scratch_model.hdf5
+!from_scratch_model_history.png
