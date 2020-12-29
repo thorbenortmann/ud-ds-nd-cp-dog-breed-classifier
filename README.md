@@ -71,16 +71,25 @@ The created web app consists of two pages:
 ## Installation
 
 ### Requirements
-The code should run with no issues using Python versions >=3.6.  
+The code should run with no issues using Python version `3.7`.
+To use it with versions `>3.7`, at least, you would have to change the used tensorflow version to `>=2.2`.  
+
 As the code in this repository uses convolutional neural networks (CNNs),
 powerful GPUs will make it run significantly faster but are not necessary
 (GPUs should be auto-detected by the used `tensorflow` package).  
 
+To run the training scripts you should have `>=16GB RAM` available on your machine.
+
 ### Setup
+First you should download the data used for model training, validation and evaluation from
+[here](https://drive.google.com/drive/folders/1k45XN3L9dHUp9ypm2_KpWidBIWqIKuoN?usp=sharing).  
+It contains a `dog_images` folder which should be placed under
+`dog_breed_classifier/detection/training/data`.  
+It is also used as the source for the predicted category/breed names. 
 
 To install the project run:  
 `./scripts/<op>/prepare_env.<filetype>`  
-where `<op>` is either `linux` or `win`  
+where `<op>` is either `ubuntu` or `win`  
 and `<filetype>` is either `sh` or `bat`  
 depending on your operating system (also for windows you will have to use backslashes for your paths) .
 
@@ -93,11 +102,7 @@ You should see the upload page shown in the image above in the [results section]
 
 
 ### Data
-You can download the data used for model training, validation and evaluation from
-[here](https://drive.google.com/drive/folders/1k45XN3L9dHUp9ypm2_KpWidBIWqIKuoN?usp=sharing).  
-It contains a `dog_images` folder which should be placed under
-`dog_breed_classifier/detection/training/data`.  
-Overall the dataset contains 8351 images of dogs categorized in 133 breeds.
+The dataset you downloaded in the first [setup](#setup) step contains 8351 images of dogs categorized in 133 breeds.
 6680 images are in the training set,
 835 images in the validation set
 and 836 images in the test set.
