@@ -45,8 +45,8 @@ Nevertheless, it is very probable that a larger network, more epochs and data au
 when training a model from scratch (but that would also need a lot of time and computing power).  
 Also see: [from_scratch.pdf](./docs/from_scratch.pdf)
 
-In the end
-I do not believe that the ~70% accuracy I achieved with the transfer learning approach could ever be beaten
+In the end I achieved **~70% accuracy** with a transfer learning approach.
+I do not believe this result could ever be beaten
 by the learning from scratch approach with that little data. 
 Transfer learning really showed its advantages here
 as the weights of the
